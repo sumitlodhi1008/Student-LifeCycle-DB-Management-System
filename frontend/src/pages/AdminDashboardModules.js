@@ -905,3 +905,162 @@ export const FeeManagement = () => {
     </div>
   );
 };
+
+export const ExamManagement = () => {
+  const [exams, setExams] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '', courseId: '', semester: '', examType: '', examDate: '', maxMarks: '', passingMarks: ''
+  });
+
+  useEffect(() => {
+    fetchExams();
+    fetchCourses();
+  }, []);
+
+  const fetchExams = async () => {
+    try {
+      const response = await api.get('/api/exams');
+      setExams(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch exams');
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const response = await api.get('/api/courses');
+      setCourses(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/exams', formData);
+      toast.success('Exam created successfully');
+      setShowForm(false);
+      fetchExams();
+      setFormData({ name: '', courseId: '', semester: '', examType: '', examDate: '', maxMarks: '', passingMarks: '' });
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to create exam');
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="font-serif text-4xl font-bold text-brand-blue">Exam Management</h1>
+        <Button onClick={() => setShowForm(!showForm)} className="bg-brand-blue" data-testid="add-exam-button">
+          {showForm ? 'Cancel' : 'Create Exam'}
+        </Button>
+      </div>
+
+      {showForm && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Create New Exam</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Exam Name</Label>
+                  <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required placeholder="Mid-Term Exam" />
+                </div>
+                <div>
+                  <Label>Course</Label>
+                  <Select onValueChange={(value) => setFormData({...formData, courseId: value})} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {courses.map(course => (
+                        <SelectItem key={course._id} value={course._id}>{course.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Semester</Label>
+                  <Input type="number" value={formData.semester} onChange={(e) => setFormData({...formData, semester: e.target.value})} required />
+                </div>
+                <div>
+                  <Label>Exam Type</Label>
+                  <Select onValueChange={(value) => setFormData({...formData, examType: value})} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mid-term">Mid-Term</SelectItem>
+                      <SelectItem value="end-term">End-Term</SelectItem>
+                      <SelectItem value="practical">Practical</SelectItem>
+                      <SelectItem value="assignment">Assignment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Exam Date</Label>
+                  <Input type="date" value={formData.examDate} onChange={(e) => setFormData({...formData, examDate: e.target.value})} />
+                </div>
+                <div>
+                  <Label>Maximum Marks</Label>
+                  <Input type="number" value={formData.maxMarks} onChange={(e) => setFormData({...formData, maxMarks: e.target.value})} required />
+                </div>
+                <div>
+                  <Label>Passing Marks</Label>
+                  <Input type="number" value={formData.passingMarks} onChange={(e) => setFormData({...formData, passingMarks: e.target.value})} required />
+                </div>
+              </div>
+              <Button type="submit" className="bg-brand-blue">Create Exam</Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All Exams ({exams.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Exam Name</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead>Semester</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Max Marks</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {exams.map((exam) => (
+                <TableRow key={exam._id}>
+                  <TableCell className="font-medium">{exam.name}</TableCell>
+                  <TableCell>{exam.courseId?.name}</TableCell>
+                  <TableCell>{exam.semester}</TableCell>
+                  <TableCell className="capitalize">{exam.examType}</TableCell>
+                  <TableCell>{exam.examDate ? new Date(exam.examDate).toLocaleDateString() : '-'}</TableCell>
+                  <TableCell>{exam.maxMarks}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                      exam.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                      exam.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {exam.status}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
