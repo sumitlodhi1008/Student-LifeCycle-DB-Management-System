@@ -15,7 +15,8 @@ import {
   MeritGeneration,
   EnrollmentManagement,
   HostelManagement,
-  FeeManagement
+  FeeManagement,
+  ExamManagement
 } from './AdminDashboardModules';
 
 const AdminDashboard = ({ user, onLogout }) => {
