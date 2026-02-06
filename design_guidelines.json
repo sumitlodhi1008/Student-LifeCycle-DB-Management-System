@@ -1,0 +1,181 @@
+{
+  "identity": {
+    "persona": "E1",
+    "role": "Creative Designer",
+    "principles": [
+      "Fusion over Imitation",
+      "Emotion First",
+      "Content is King",
+      "Zoom In",
+      "Negative Space",
+      "Contrast"
+    ]
+  },
+  "theme": {
+    "mode": "light",
+    "strategy": "Professional Academic (Light Mode Focus)",
+    "reasoning": "University portals require high readability for text-heavy content (forms, grades, notices). A clean, light theme conveys trust, openness, and professionalism."
+  },
+  "typography": {
+    "strategy": "The Old Money Tech",
+    "imports": [
+      "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    ],
+    "families": {
+      "heading": "Playfair Display, serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "usage": {
+      "h1": "font-serif text-5xl md:text-6xl font-bold tracking-tight text-primary",
+      "h2": "font-serif text-3xl md:text-4xl font-semibold tracking-tight text-primary",
+      "h3": "font-serif text-2xl font-medium text-primary/90",
+      "body": "font-sans text-base leading-relaxed text-slate-600",
+      "small": "font-sans text-sm font-medium text-slate-500",
+      "label": "font-sans text-xs font-bold uppercase tracking-wider text-slate-400"
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#1e3a8a",
+        "foreground": "#ffffff",
+        "description": "Deep Royal Blue - Trust, Intelligence, Authority"
+      },
+      "secondary": {
+        "DEFAULT": "#d97706",
+        "foreground": "#ffffff",
+        "description": "Academic Gold - Excellence, Tradition, Achievement"
+      },
+      "accent": {
+        "DEFAULT": "#f1f5f9",
+        "foreground": "#0f172a",
+        "description": "Soft Slate - Neutral balance"
+      },
+      "background": {
+        "DEFAULT": "#f8fafc",
+        "paper": "#ffffff",
+        "subtle": "#f1f5f9"
+      },
+      "text": {
+        "primary": "#0f172a",
+        "secondary": "#475569",
+        "muted": "#94a3b8"
+      },
+      "status": {
+        "success": "#10b981",
+        "warning": "#f59e0b",
+        "error": "#ef4444",
+        "info": "#3b82f6"
+      }
+    },
+    "tailwind_config_extension": {
+      "colors": {
+        "brand": {
+          "blue": "#1e3a8a",
+          "gold": "#d97706",
+          "cream": "#f8fafc"
+        }
+      }
+    }
+  },
+  "layout": {
+    "spacing_scale": "Generous (2x standard)",
+    "container": {
+      "padding": "p-6 md:p-12 lg:p-20",
+      "max_width": "max-w-7xl mx-auto"
+    },
+    "radius": {
+      "default": "rounded-lg",
+      "card": "rounded-xl",
+      "button": "rounded-md"
+    },
+    "grids": {
+      "marketing": {
+        "name": "The Tetris Grid",
+        "classes": "grid grid-cols-1 md:grid-cols-12 gap-8",
+        "usage": "Use for Homepage, News, and Landing sections. Mix col-span-8 (hero) with col-span-4 (sidebar/stats)."
+      },
+      "dashboard": {
+        "name": "High Density Grid",
+        "classes": "grid grid-cols-1 md:grid-cols-4 gap-6",
+        "usage": "Use for Admin/Student Dashboards. Strict alignment. Widgets should stretch to fill height."
+      }
+    }
+  },
+  "components": {
+    "strategy": "Hybrid",
+    "rules": [
+      "Marketing Pages: Use raw HTML/Tailwind for creative layouts. Do NOT use Shadcn Cards here.",
+      "Dashboards: Use Shadcn components (Cards, Tables, Forms) for consistency and functionality.",
+      "Forms: ALWAYS use Shadcn Form/Input components. Never native HTML inputs.",
+      "Buttons: Primary actions use 'brand-blue'. Secondary actions use 'outline' or 'ghost'.",
+      "Cards: Dashboard cards should be 'flat' (border only) or 'lifted' (shadow-sm) on hover."
+    ],
+    "specifics": {
+      "navbar": "Sticky, Glassmorphism (backdrop-blur-md bg-white/80), border-b border-slate-200.",
+      "sidebar": "Fixed, Dark Mode (bg-slate-900 text-slate-300) for high contrast against the light dashboard content.",
+      "tables": "Clean, minimal borders. Header text uppercase and small. Row hover effects mandatory."
+    }
+  },
+  "motion": {
+    "library": "framer-motion",
+    "rules": [
+      "Page Transitions: Smooth fade-in (opacity: 0 -> 1, y: 10 -> 0).",
+      "Hover: Subtle lift (-2px) and shadow increase for cards.",
+      "Lists: Staggered entrance for table rows and grid items.",
+      "Scroll: Use 'lenis' for smooth scrolling on the marketing homepage."
+    ]
+  },
+  "assets": {
+    "icons": {
+      "primary": "lucide-react",
+      "dashboard": "phosphor-react (if available) or lucide-react",
+      "usage": "Use stroke-width={1.5} for a refined, elegant look."
+    },
+    "images": [
+      {
+        "category": "hero_background",
+        "url": "https://images.unsplash.com/photo-1760012587658-42503e1e3b9a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwbW9kZXJuJTIwYXJjaGl0ZWN0dXJlJTIwc3R1ZGVudHMlMjBzdHVkeWluZ3xlbnwwfHx8fDE3NzAzNzc3MzB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Modern university building with dramatic sky. Use for Homepage Hero."
+      },
+      {
+        "category": "campus_life",
+        "url": "https://images.unsplash.com/photo-1763615834709-cd4b196980db?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwbW9kZXJuJTIwYXJjaGl0ZWN0dXJlJTIwc3R1ZGVudHMlMjBzdHVkeWluZ3xlbnwwfHx8fDE3NzAzNzc3MzB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Green campus with modern building. Use for 'About Us' or 'Campus Life' section."
+      },
+      {
+        "category": "library_study",
+        "url": "https://images.unsplash.com/photo-1761492190275-129cf71ff124?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwzfHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwbW9kZXJuJTIwYXJjaGl0ZWN0dXJlJTIwc3R1ZGVudHMlMjBzdHVkeWluZ3xlbnwwfHx8fDE3NzAzNzc3MzB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Student working in a modern library. Use for 'Academics' or 'Student Portal' login."
+      },
+      {
+        "category": "student_interaction",
+        "url": "https://images.unsplash.com/photo-1769209435699-9cc1fd8e7f57?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHw0fHx1bml2ZXJzaXR5JTIwY2FtcHVzJTIwbW9kZXJuJTIwYXJjaGl0ZWN0dXJlJTIwc3R1ZGVudHMlMjBzdHVkeWluZ3xlbnwwfHx8fDE3NzAzNzc3MzB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Students walking in plaza. Use for 'Community' or 'Events' section."
+      }
+    ]
+  },
+  "universal_guidelines": [
+    "Avoid 'AI Slop': Do not use generic centered layouts or default blue gradients.",
+    "Depth: Use z-index and layered shadows to create depth.",
+    "Glassmorphism: Use backdrop-blur-md or xl for overlays and sticky headers.",
+    "Transitions: NEVER use 'transition: all'. Animate specific properties (opacity, transform, colors).",
+    "Alignment: Do NOT center align the app container globally.",
+    "Buttons: Use pill-shaped or sharp buttons with micro-interactions.",
+    "Icons: NO Emojis. Use Lucide React icons.",
+    "Spacing: Use 2-3x more spacing than standard (p-8, p-12).",
+    "Toasts: Use 'sonner' for notifications.",
+    "Testing: All interactive elements MUST have 'data-testid'."
+  ],
+  "instructions_to_main_agent": [
+    "1. Install Dependencies: Ensure 'framer-motion', 'lucide-react', 'clsx', 'tailwind-merge' are installed.",
+    "2. Configure Tailwind: Update 'tailwind.config.js' with the Brand Colors (Blue/Gold) and Fonts (Playfair/Manrope).",
+    "3. Global CSS: Import the Google Fonts in 'index.css' and set the base font families.",
+    "4. Layout Structure: Create a 'Layout' component that handles the Sidebar (Dashboard) vs Navbar (Marketing) logic.",
+    "5. Component Customization: Override Shadcn default styles to match the 'Old Money Tech' aesthetic (e.g., sharper corners on cards, serif headings in dialogs).",
+    "6. Dashboard Implementation: Build the Admin, Faculty, and Student dashboards using the 'High Density Grid'.",
+    "7. Marketing Implementation: Build the Homepage using the 'Tetris Grid' and the provided images.",
+    "8. Testing: Add 'data-testid' to all buttons, inputs, and links."
+  ]
+}
