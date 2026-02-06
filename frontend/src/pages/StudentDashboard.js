@@ -687,17 +687,51 @@ const StudentFees = () => {
 
 const StudentHostel = () => {
   const [allocation, setAllocation] = useState(null);
+  const [availableHostels, setAvailableHostels] = useState([]);
+  const [selectedHostel, setSelectedHostel] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [hasAllocation, setHasAllocation] = useState(false);
 
   useEffect(() => {
     fetchAllocation();
+    fetchAvailableHostels();
   }, []);
 
   const fetchAllocation = async () => {
     try {
       const response = await api.get('/api/hostels/my-allocation');
       setAllocation(response.data);
+      setHasAllocation(true);
+    } catch (error) {
+      setHasAllocation(false);
+    }
+  };
+
+  const fetchAvailableHostels = async () => {
+    try {
+      const response = await api.get('/api/hostels/available');
+      setAvailableHostels(response.data);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleApply = async () => {
+    if (!selectedHostel) {
+      toast.error('Please select a hostel');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post('/api/hostels/apply', { hostelId: selectedHostel });
+      toast.success(response.data.message);
+      setAllocation(response.data.allocation);
+      setHasAllocation(true);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to apply for hostel');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -705,7 +739,7 @@ const StudentHostel = () => {
     <div>
       <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">Hostel Information</h1>
       
-      {allocation ? (
+      {hasAllocation && allocation ? (
         <Card>
           <CardHeader>
             <CardTitle>Hostel Allocation Details</CardTitle>
@@ -734,11 +768,75 @@ const StudentHostel = () => {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <p className="text-slate-600">No hostel allocation found</p>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Apply for Hostel</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-600 mb-4">You don't have a hostel allocation yet. Apply for one below:</p>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label>Select Hostel</Label>
+                  <Select onValueChange={setSelectedHostel}>
+                    <SelectTrigger data-testid="hostel-select">
+                      <SelectValue placeholder="Choose a hostel" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableHostels.map(hostel => (
+                        <SelectItem key={hostel._id} value={hostel._id}>
+                          {hostel.name} ({hostel.gender}) - {hostel.availableRooms} rooms available - ₹{hostel.feePerSemester}/sem
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button 
+                  onClick={handleApply} 
+                  disabled={loading || !selectedHostel}
+                  className="bg-brand-blue"
+                  data-testid="apply-hostel-btn"
+                >
+                  {loading ? 'Applying...' : 'Apply for Hostel'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {availableHostels.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Available Hostels</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Hostel Name</TableHead>
+                      <TableHead>Gender</TableHead>
+                      <TableHead>Available Rooms</TableHead>
+                      <TableHead>Fee/Semester</TableHead>
+                      <TableHead>Amenities</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {availableHostels.map((hostel) => (
+                      <TableRow key={hostel._id}>
+                        <TableCell className="font-medium">{hostel.name}</TableCell>
+                        <TableCell className="capitalize">{hostel.gender}</TableCell>
+                        <TableCell>{hostel.availableRooms}</TableCell>
+                        <TableCell>₹{hostel.feePerSemester}</TableCell>
+                        <TableCell>{hostel.amenities?.join(', ') || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
     </div>
   );
