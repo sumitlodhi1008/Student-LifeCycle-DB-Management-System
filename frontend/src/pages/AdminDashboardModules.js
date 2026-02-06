@@ -13,6 +13,7 @@ export const FacultyManagement = () => {
   const [departments, setDepartments] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [formData, setFormData] = useState({
     email: '', password: '', fullName: '', phone: '', employeeId: '',
     departmentId: '', designation: '', qualification: '', specialization: '', experience: ''
@@ -21,7 +22,7 @@ export const FacultyManagement = () => {
   useEffect(() => {
     fetchFaculties();
     fetchDepartments();
-    fetchSubjects();
+    fetchAllSubjects();
   }, []);
 
   const fetchFaculties = async () => {
@@ -42,13 +43,13 @@ export const FacultyManagement = () => {
     }
   };
 
-  const fetchSubjects = async () => {
+  const fetchAllSubjects = async () => {
     try {
-      const response = await api.get('/api/courses');
+      const coursesRes = await api.get('/api/courses');
       const allSubjects = [];
-      for (const course of response.data) {
+      for (const course of coursesRes.data) {
         const subjectsRes = await api.get(`/api/courses/${course._id}/subjects`);
-        allSubjects.push(...subjectsRes.data);
+        allSubjects.push(...subjectsRes.data.map(s => ({ ...s, courseName: course.name })));
       }
       setSubjects(allSubjects);
     } catch (error) {
@@ -59,9 +60,18 @@ export const FacultyManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/faculty', formData);
-      toast.success('Faculty created successfully');
+      const response = await api.post('/api/faculty', formData);
+      
+      // Assign subjects to the newly created faculty
+      if (selectedSubjects.length > 0) {
+        await api.post(`/api/faculty/${response.data.faculty._id}/assign-subjects`, { 
+          subjectIds: selectedSubjects 
+        });
+      }
+      
+      toast.success('Faculty created and subjects assigned successfully');
       setShowForm(false);
+      setSelectedSubjects([]);
       fetchFaculties();
       setFormData({
         email: '', password: '', fullName: '', phone: '', employeeId: '',
@@ -72,14 +82,12 @@ export const FacultyManagement = () => {
     }
   };
 
-  const handleAssignSubjects = async (facultyId, subjectIds) => {
-    try {
-      await api.post(`/api/faculty/${facultyId}/assign-subjects`, { subjectIds });
-      toast.success('Subjects assigned successfully');
-      fetchFaculties();
-    } catch (error) {
-      toast.error('Failed to assign subjects');
-    }
+  const toggleSubject = (subjectId) => {
+    setSelectedSubjects(prev => 
+      prev.includes(subjectId) 
+        ? prev.filter(id => id !== subjectId)
+        : [...prev, subjectId]
+    );
   };
 
   return (
@@ -149,7 +157,31 @@ export const FacultyManagement = () => {
                   <Input type="number" value={formData.experience} onChange={(e) => setFormData({...formData, experience: e.target.value})} />
                 </div>
               </div>
-              <Button type="submit" className="bg-brand-blue" data-testid="submit-faculty-button">Create Faculty</Button>
+
+              <div className="mt-6">
+                <Label className="text-base font-semibold mb-4 block">Assign Subjects (Select multiple)</Label>
+                <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
+                  {subjects.map((subject) => (
+                    <div key={subject._id} className="flex items-center space-x-3 p-2 hover:bg-slate-50 rounded">
+                      <input
+                        type="checkbox"
+                        id={`subject-${subject._id}`}
+                        checked={selectedSubjects.includes(subject._id)}
+                        onChange={() => toggleSubject(subject._id)}
+                        className="h-4 w-4"
+                      />
+                      <label htmlFor={`subject-${subject._id}`} className="flex-1 cursor-pointer text-sm">
+                        <span className="font-medium">{subject.name}</span>
+                        <span className="text-slate-500"> ({subject.code})</span>
+                        <span className="text-xs text-slate-400 ml-2">- {subject.courseName} - Sem {subject.semester}</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mt-2">{selectedSubjects.length} subject(s) selected</p>
+              </div>
+
+              <Button type="submit" className="bg-brand-blue" data-testid="submit-faculty-button">Create Faculty & Assign Subjects</Button>
             </form>
           </CardContent>
         </Card>
