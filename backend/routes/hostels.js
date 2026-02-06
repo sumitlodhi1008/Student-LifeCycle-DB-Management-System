@@ -109,4 +109,70 @@ router.post('/allocate', auth, roleAuth('admin'), async (req, res) => {
   }
 });
 
+// Apply for hostel (Student)
+router.post('/apply', auth, roleAuth('student'), async (req, res) => {
+  try {
+    const { hostelId } = req.body;
+
+    // Check if already allocated
+    const existing = await HostelAllocation.findOne({ 
+      studentId: req.userId, 
+      status: 'allocated' 
+    });
+    
+    if (existing) {
+      return res.status(400).json({ error: 'You already have a hostel allocation' });
+    }
+
+    const hostel = await Hostel.findById(hostelId);
+    if (!hostel) {
+      return res.status(404).json({ error: 'Hostel not found' });
+    }
+
+    if (hostel.availableRooms <= 0) {
+      return res.status(400).json({ error: 'No rooms available in this hostel' });
+    }
+
+    // Auto-allocate room number
+    const existingAllocations = await HostelAllocation.find({ hostelId }).sort({ roomNumber: -1 });
+    let nextRoomNumber = 101;
+    if (existingAllocations.length > 0) {
+      nextRoomNumber = parseInt(existingAllocations[0].roomNumber) + 1;
+    }
+
+    const allocation = new HostelAllocation({
+      studentId: req.userId,
+      hostelId,
+      roomNumber: String(nextRoomNumber)
+    });
+
+    await allocation.save();
+
+    hostel.availableRooms -= 1;
+    await hostel.save();
+
+    const populatedAllocation = await HostelAllocation.findById(allocation._id).populate('hostelId');
+
+    res.json({
+      message: 'Hostel allocated successfully',
+      allocation: populatedAllocation
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get available hostels for student gender
+router.get('/available', auth, async (req, res) => {
+  try {
+    const hostels = await Hostel.find({ 
+      isActive: true, 
+      availableRooms: { $gt: 0 } 
+    });
+    res.json(hostels);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
