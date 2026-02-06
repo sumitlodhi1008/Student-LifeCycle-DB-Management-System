@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { GraduationCap, Home, FileText, Calendar, DollarSign, Building, File, Bell, User } from 'lucide-react';
+import { GraduationCap, Home, FileText, Calendar, DollarSign, Building, File, Bell, User, BookOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
@@ -15,6 +15,7 @@ const StudentDashboard = ({ user, onLogout }) => {
         <Routes>
           <Route path="/" element={<StudentHome user={user} />} />
           <Route path="/profile" element={<StudentProfile />} />
+          <Route path="/subjects" element={<StudentSubjects />} />
           <Route path="/attendance" element={<StudentAttendance />} />
           <Route path="/results" element={<StudentResults />} />
           <Route path="/fees" element={<StudentFees />} />
@@ -182,6 +183,7 @@ const StudentHome = ({ user }) => {
 const StudentProfile = () => {
   const [enrollment, setEnrollment] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [subjects, setSubjects] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -192,6 +194,12 @@ const StudentProfile = () => {
       const response = await api.get('/api/enrollments/my-enrollment');
       setEnrollment(response.data.enrollment);
       setProfile(response.data.profile);
+      
+      // Fetch subjects for the course
+      if (response.data.enrollment?.courseId?._id) {
+        const subjectsRes = await api.get(`/api/courses/${response.data.enrollment.courseId._id}/subjects`);
+        setSubjects(subjectsRes.data);
+      }
     } catch (error) {
       toast.error('Failed to fetch profile');
     }
@@ -201,8 +209,8 @@ const StudentProfile = () => {
     <div>
       <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">My Profile</h1>
       
-      {enrollment && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {enrollment && (
           <Card>
             <CardHeader>
               <CardTitle>Academic Information</CardTitle>
@@ -232,43 +240,171 @@ const StudentProfile = () => {
               </div>
             </CardContent>
           </Card>
+        )}
 
-          {profile && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-slate-600">Full Name</p>
-                    <p className="font-medium">{profile.fullName}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600">Email</p>
-                    <p className="font-medium">{profile.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600">Phone</p>
-                    <p className="font-medium">{profile.phone}</p>
-                  </div>
-                  {profile.dateOfBirth && (
-                    <div>
-                      <p className="text-sm text-slate-600">Date of Birth</p>
-                      <p className="font-medium">{new Date(profile.dateOfBirth).toLocaleDateString()}</p>
-                    </div>
-                  )}
-                  {profile.gender && (
-                    <div>
-                      <p className="text-sm text-slate-600">Gender</p>
-                      <p className="font-medium capitalize">{profile.gender}</p>
-                    </div>
-                  )}
+        {profile && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-slate-600">Full Name</p>
+                  <p className="font-medium">{profile.fullName}</p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                <div>
+                  <p className="text-sm text-slate-600">Email</p>
+                  <p className="font-medium">{profile.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Phone</p>
+                  <p className="font-medium">{profile.phone}</p>
+                </div>
+                {profile.dateOfBirth && (
+                  <div>
+                    <p className="text-sm text-slate-600">Date of Birth</p>
+                    <p className="font-medium">{new Date(profile.dateOfBirth).toLocaleDateString()}</p>
+                  </div>
+                )}
+                {profile.gender && (
+                  <div>
+                    <p className="text-sm text-slate-600">Gender</p>
+                    <p className="font-medium capitalize">{profile.gender}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {subjects.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Assigned Subjects</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject Name</TableHead>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Semester</TableHead>
+                  <TableHead>Credits</TableHead>
+                  <TableHead>Type</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subjects.map((subject) => (
+                  <TableRow key={subject._id}>
+                    <TableCell className="font-medium">{subject.name}</TableCell>
+                    <TableCell>{subject.code}</TableCell>
+                    <TableCell>{subject.semester}</TableCell>
+                    <TableCell>{subject.credits}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        subject.isElective ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {subject.isElective ? 'Elective' : 'Core'}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+const StudentSubjects = () => {
+  const [subjects, setSubjects] = useState([]);
+  const [enrollment, setEnrollment] = useState(null);
+
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  const fetchSubjects = async () => {
+    try {
+      const enrollmentRes = await api.get('/api/enrollments/my-enrollment');
+      setEnrollment(enrollmentRes.data.enrollment);
+      
+      if (enrollmentRes.data.enrollment?.courseId?._id) {
+        const subjectsRes = await api.get(`/api/courses/${enrollmentRes.data.enrollment.courseId._id}/subjects`);
+        setSubjects(subjectsRes.data);
+      }
+    } catch (error) {
+      toast.error('Failed to fetch subjects');
+    }
+  };
+
+  // Group subjects by semester
+  const subjectsBySemester = subjects.reduce((acc, subject) => {
+    const sem = subject.semester;
+    if (!acc[sem]) acc[sem] = [];
+    acc[sem].push(subject);
+    return acc;
+  }, {});
+
+  return (
+    <div>
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">My Subjects</h1>
+      
+      {enrollment && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <p className="text-sm text-slate-600">Course: <span className="font-semibold text-brand-blue">{enrollment.courseId?.name}</span></p>
+            <p className="text-sm text-slate-600 mt-2">Current Semester: <span className="font-semibold text-brand-blue">{enrollment.currentSemester}</span></p>
+          </CardContent>
+        </Card>
+      )}
+
+      {Object.keys(subjectsBySemester).sort((a, b) => a - b).map(semester => (
+        <Card key={semester} className="mb-6">
+          <CardHeader>
+            <CardTitle>Semester {semester}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject Name</TableHead>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Credits</TableHead>
+                  <TableHead>Type</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subjectsBySemester[semester].map((subject) => (
+                  <TableRow key={subject._id}>
+                    <TableCell className="font-medium">{subject.name}</TableCell>
+                    <TableCell>{subject.code}</TableCell>
+                    <TableCell>{subject.credits}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        subject.isElective ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {subject.isElective ? 'Elective' : 'Core'}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ))}
+
+      {subjects.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-slate-600">No subjects assigned yet</p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
@@ -723,6 +859,20 @@ const StudentDocuments = () => {
           <CardTitle>Document Vault</CardTitle>
         </CardHeader>
         <CardContent>
+          {enrollment && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-medium text-brand-blue">Admission Card</p>
+                  <p className="text-sm text-slate-600">Digital admission card available for download</p>
+                </div>
+                <Button onClick={generateAdmissionCard} variant="outline" size="sm">
+                  View/Print
+                </Button>
+              </div>
+            </div>
+          )}
+
           {documents.length > 0 ? (
             <Table>
               <TableHeader>
@@ -749,7 +899,7 @@ const StudentDocuments = () => {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-center py-8 text-slate-600">No documents available</p>
+            <p className="text-center py-8 text-slate-600">No other documents uploaded yet</p>
           )}
         </CardContent>
       </Card>
@@ -811,7 +961,7 @@ const StudentNotifications = () => {
 };
 
 const Sidebar = ({ user, onLogout }) => (
-  <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6 overflow-y-auto">
+  <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6 overflow-y-auto pb-24">
     <div className="flex items-center space-x-2 mb-8">
       <GraduationCap className="h-8 w-8" />
       <span className="font-serif text-2xl font-bold">UniPortal</span>
@@ -821,12 +971,15 @@ const Sidebar = ({ user, onLogout }) => (
       <p className="font-semibold">{user.fullName}</p>
       <p className="text-sm text-slate-400">{user.role}</p>
     </div>
-    <nav className="space-y-2">
+    <nav className="space-y-2 mb-20">
       <Link to="/student" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-dashboard">
         <Home className="inline h-4 w-4 mr-2" />Dashboard
       </Link>
       <Link to="/student/profile" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-profile">
         <User className="inline h-4 w-4 mr-2" />Profile
+      </Link>
+      <Link to="/student/subjects" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-subjects">
+        <BookOpen className="inline h-4 w-4 mr-2" />My Subjects
       </Link>
       <Link to="/student/attendance" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-attendance">
         <Calendar className="inline h-4 w-4 mr-2" />Attendance
@@ -847,7 +1000,7 @@ const Sidebar = ({ user, onLogout }) => (
         <Bell className="inline h-4 w-4 mr-2" />Notifications
       </Link>
     </nav>
-    <div className="absolute bottom-6 left-6 right-6">
+    <div className="fixed bottom-0 left-0 w-64 bg-slate-900 p-6 border-t border-slate-800">
       <Button variant="outline" className="w-full" onClick={onLogout} data-testid="sidebar-logout">Logout</Button>
     </div>
   </div>
