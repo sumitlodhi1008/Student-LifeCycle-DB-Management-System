@@ -667,6 +667,9 @@ const Sidebar = ({ user, onLogout }) => (
       <Link to="/admin/enrollments" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-enrollments">
         <Users className="inline h-4 w-4 mr-2" />Enrollments
       </Link>
+      <Link to="/admin/exams" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-exams">
+        <FileText className="inline h-4 w-4 mr-2" />Exams
+      </Link>
       <Link to="/admin/hostels" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-hostels">
         <Building className="inline h-4 w-4 mr-2" />Hostels
       </Link>
