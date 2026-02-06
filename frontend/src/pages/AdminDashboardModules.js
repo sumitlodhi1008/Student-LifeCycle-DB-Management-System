@@ -459,17 +459,27 @@ export const EnrollmentManagement = () => {
           <CardTitle>Filter by Course</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select onValueChange={setFilterCourse}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Courses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Courses</SelectItem>
-              {courses.map(course => (
-                <SelectItem key={course._id} value={course._id}>{course.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center space-x-4">
+            <Select onValueChange={setFilterCourse} value={filterCourse}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Courses" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map(course => (
+                  <SelectItem key={course._id} value={course._id}>{course.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {filterCourse && (
+              <Button 
+                variant="outline" 
+                onClick={() => setFilterCourse('')}
+                size="sm"
+              >
+                Clear Filter
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
