@@ -174,7 +174,7 @@ const StatusBadge = ({ status }) => {
 
 const Sidebar = ({ user, onLogout }) => {
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6">
+    <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6 overflow-y-auto pb-24">
       <div className="flex items-center space-x-2 mb-8">
         <GraduationCap className="h-8 w-8" />
         <span className="font-serif text-2xl font-bold">UniPortal</span>
@@ -186,7 +186,7 @@ const Sidebar = ({ user, onLogout }) => {
         <p className="text-sm text-slate-400">{user.role}</p>
       </div>
 
-      <nav className="space-y-2">
+      <nav className="space-y-2 mb-20">
         <Link to="/applicant" className="block px-4 py-2 rounded-md hover:bg-slate-800 transition-colors" data-testid="nav-dashboard">
           <HomeIcon className="inline h-4 w-4 mr-2" />
           Dashboard
@@ -201,7 +201,7 @@ const Sidebar = ({ user, onLogout }) => {
         </Link>
       </nav>
 
-      <div className="absolute bottom-6 left-6 right-6">
+      <div className="fixed bottom-0 left-0 w-64 bg-slate-900 p-6 border-t border-slate-800">
         <Button variant="outline" className="w-full" onClick={onLogout} data-testid="sidebar-logout">
           Logout
         </Button>
