@@ -8,10 +8,9 @@ const connectDB = async () => {
     const mongoUrl = process.env.MONGO_URL;
     const dbName = process.env.DB_NAME;
     
-    await mongoose.connect(`${mongoUrl}${dbName}`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const connectionString = mongoUrl.endsWith('/') ? `${mongoUrl}${dbName}` : `${mongoUrl}/${dbName}`;
+    
+    await mongoose.connect(connectionString);
     
     console.log('MongoDB connected successfully');
   } catch (error) {
