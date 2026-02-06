@@ -610,9 +610,11 @@ const StudentHostel = () => {
 
 const StudentDocuments = () => {
   const [documents, setDocuments] = useState([]);
+  const [enrollment, setEnrollment] = useState(null);
 
   useEffect(() => {
     fetchDocuments();
+    fetchEnrollment();
   }, []);
 
   const fetchDocuments = async () => {
@@ -624,9 +626,97 @@ const StudentDocuments = () => {
     }
   };
 
+  const fetchEnrollment = async () => {
+    try {
+      const response = await api.get('/api/enrollments/my-enrollment');
+      setEnrollment(response.data.enrollment);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const generateAdmissionCard = () => {
+    if (!enrollment) return;
+
+    const cardContent = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; }
+            .header { text-align: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px; }
+            .title { font-size: 28px; color: #1e3a8a; font-weight: bold; }
+            .subtitle { font-size: 16px; color: #64748b; margin-top: 10px; }
+            .content { margin: 30px 0; }
+            .row { display: flex; margin: 15px 0; }
+            .label { font-weight: bold; width: 200px; color: #475569; }
+            .value { color: #1e293b; }
+            .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #94a3b8; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">UniPortal University</div>
+            <div class="subtitle">ADMISSION CARD</div>
+            <div class="subtitle">Academic Year ${enrollment.enrollmentYear}-${enrollment.enrollmentYear + 1}</div>
+          </div>
+          <div class="content">
+            <div class="row">
+              <div class="label">Student Name:</div>
+              <div class="value">${enrollment.studentId?.fullName || 'N/A'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Enrollment Number:</div>
+              <div class="value">${enrollment.enrollmentNo}</div>
+            </div>
+            <div class="row">
+              <div class="label">Roll Number:</div>
+              <div class="value">${enrollment.rollNo}</div>
+            </div>
+            <div class="row">
+              <div class="label">Course:</div>
+              <div class="value">${enrollment.courseId?.name || 'N/A'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Course Code:</div>
+              <div class="value">${enrollment.courseId?.code || 'N/A'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Current Semester:</div>
+              <div class="value">${enrollment.currentSemester}</div>
+            </div>
+            <div class="row">
+              <div class="label">Admission Date:</div>
+              <div class="value">${new Date(enrollment.admissionDate).toLocaleDateString()}</div>
+            </div>
+            <div class="row">
+              <div class="label">Status:</div>
+              <div class="value">${enrollment.status.toUpperCase()}</div>
+            </div>
+          </div>
+          <div class="footer">
+            This is a computer-generated admission card and does not require a signature.<br/>
+            For any queries, contact: admissions@uniportal.edu
+          </div>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(cardContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <div>
-      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">My Documents</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="font-serif text-4xl font-bold text-brand-blue">My Documents</h1>
+        {enrollment && (
+          <Button onClick={generateAdmissionCard} className="bg-brand-blue" data-testid="generate-admission-card">
+            Generate Admission Card
+          </Button>
+        )}
+      </div>
       
       <Card>
         <CardHeader>
