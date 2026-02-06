@@ -33,6 +33,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           <Route path="/applications" element={<ApplicationManagement />} />
           <Route path="/merit" element={<MeritGeneration />} />
           <Route path="/enrollments" element={<EnrollmentManagement />} />
+          <Route path="/exams" element={<ExamManagement />} />
           <Route path="/hostels" element={<HostelManagement />} />
           <Route path="/fees" element={<FeeManagement />} />
         </Routes>
