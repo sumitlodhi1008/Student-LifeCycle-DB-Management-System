@@ -427,8 +427,11 @@ export const EnrollmentManagement = () => {
   const [filterCourse, setFilterCourse] = useState('');
 
   useEffect(() => {
-    fetchEnrollments();
     fetchCourses();
+  }, []);
+
+  useEffect(() => {
+    fetchEnrollments();
   }, [filterCourse]);
 
   const fetchEnrollments = async () => {
