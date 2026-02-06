@@ -891,7 +891,7 @@ const StudentDocuments = () => {
         </head>
         <body>
           <div class="header">
-            <div class="title">UniPortal University</div>
+            <div class="title">SLMS University</div>
             <div class="subtitle">ADMISSION CARD</div>
             <div class="subtitle">Academic Year ${enrollment.enrollmentYear}-${enrollment.enrollmentYear + 1}</div>
           </div>
@@ -931,7 +931,7 @@ const StudentDocuments = () => {
           </div>
           <div class="footer">
             This is a computer-generated admission card and does not require a signature.<br/>
-            For any queries, contact: admissions@uniportal.edu
+            For any queries, contact: admissions@SLMS.edu
           </div>
         </body>
       </html>
@@ -1064,7 +1064,7 @@ const Sidebar = ({ user, onLogout }) => (
   <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6 overflow-y-auto pb-24">
     <div className="flex items-center space-x-2 mb-8">
       <GraduationCap className="h-8 w-8" />
-      <span className="font-serif text-2xl font-bold">UniPortal</span>
+      <span className="font-serif text-2xl font-bold">SLMS</span>
     </div>
     <div className="mb-8">
       <p className="text-sm text-slate-400">Welcome,</p>

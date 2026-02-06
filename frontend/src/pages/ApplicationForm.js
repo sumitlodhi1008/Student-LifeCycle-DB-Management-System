@@ -70,7 +70,7 @@ const ApplicationForm = ({ user, onLogout }) => {
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-2">
               <GraduationCap className="h-8 w-8 text-brand-blue" />
-              <span className="font-serif text-2xl font-bold text-brand-blue">UniPortal</span>
+              <span className="font-serif text-2xl font-bold text-brand-blue">SLMS</span>
             </Link>
             <Button variant="outline" onClick={onLogout}>Logout</Button>
           </div>

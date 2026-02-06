@@ -51,7 +51,7 @@ const LoginPage = ({ setUser }) => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2 mb-6">
             <GraduationCap className="h-10 w-10 text-brand-blue" />
-            <span className="font-serif text-3xl font-bold text-brand-blue">UniPortal</span>
+            <span className="font-serif text-3xl font-bold text-brand-blue">SLMS</span>
           </Link>
         </div>
 
