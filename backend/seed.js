@@ -10,7 +10,10 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(`${process.env.MONGO_URL}${process.env.DB_NAME}`);
+    const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/';
+    const dbName = process.env.DB_NAME || 'university_db';
+    const connectionString = mongoUrl.endsWith('/') ? `${mongoUrl}${dbName}` : `${mongoUrl}/${dbName}`;
+    await mongoose.connect(connectionString);
     console.log('MongoDB connected');
   } catch (error) {
     console.error('MongoDB connection error:', error);
