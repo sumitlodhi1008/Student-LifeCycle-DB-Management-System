@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { GraduationCap, Home, FileText, Calendar, DollarSign, Building, File } from 'lucide-react';
+import { GraduationCap, Home, FileText, Calendar, DollarSign, Building, File, Bell, User } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { toast } from 'sonner';
+import api from '../utils/api';
 
 const StudentDashboard = ({ user, onLogout }) => {
   return (
@@ -11,6 +14,13 @@ const StudentDashboard = ({ user, onLogout }) => {
       <div className="ml-64 p-8">
         <Routes>
           <Route path="/" element={<StudentHome user={user} />} />
+          <Route path="/profile" element={<StudentProfile />} />
+          <Route path="/attendance" element={<StudentAttendance />} />
+          <Route path="/results" element={<StudentResults />} />
+          <Route path="/fees" element={<StudentFees />} />
+          <Route path="/hostel" element={<StudentHostel />} />
+          <Route path="/documents" element={<StudentDocuments />} />
+          <Route path="/notifications" element={<StudentNotifications />} />
         </Routes>
       </div>
     </div>
@@ -18,42 +28,700 @@ const StudentDashboard = ({ user, onLogout }) => {
 };
 
 const StudentHome = ({ user }) => {
+  const [enrollment, setEnrollment] = useState(null);
+  const [stats, setStats] = useState({
+    attendance: 0,
+    results: [],
+    fees: { total: 0, paid: 0, pending: 0 }
+  });
+
+  useEffect(() => {
+    fetchEnrollment();
+    fetchStats();
+  }, []);
+
+  const fetchEnrollment = async () => {
+    try {
+      const response = await api.get('/api/enrollments/my-enrollment');
+      setEnrollment(response.data.enrollment);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const [attendanceRes, feesRes] = await Promise.all([
+        api.get('/api/attendance/my-attendance'),
+        api.get('/api/fees/my-fees')
+      ]);
+
+      const attendanceData = attendanceRes.data;
+      const totalClasses = attendanceData.attendance?.length || 0;
+      const presentClasses = attendanceData.attendance?.filter(a => a.status === 'present').length || 0;
+      const attendancePercent = totalClasses > 0 ? ((presentClasses / totalClasses) * 100).toFixed(2) : 0;
+
+      setStats({
+        attendance: attendancePercent,
+        fees: feesRes.data.summary || { total: 0, paid: 0, pending: 0 }
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div>
-      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8" data-testid="student-dashboard">Student Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatsCard title="Current Semester" value="1" icon={<Calendar />} />
-        <StatsCard title="Attendance" value="--%" icon={<FileText />} />
-        <StatsCard title="Fees Status" value="View Details" icon={<DollarSign />} />
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8" data-testid="student-dashboard">
+        Welcome, {user.fullName}!
+      </h1>
+
+      {enrollment ? (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Enrollment No</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-brand-blue">{enrollment.enrollmentNo}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Roll No</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-brand-blue">{enrollment.rollNo}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Current Semester</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-brand-blue">{enrollment.currentSemester}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Attendance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{stats.attendance}%</div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <Card className="mb-8">
+          <CardContent className="p-8 text-center">
+            <p className="text-slate-600">Loading enrollment details...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Course Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {enrollment ? (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Course:</span>
+                  <span className="font-medium">{enrollment.courseId?.name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Code:</span>
+                  <span className="font-medium">{enrollment.courseId?.code}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Program:</span>
+                  <span className="font-medium">{enrollment.courseId?.programType}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Status:</span>
+                  <span className="font-medium capitalize">{enrollment.status}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">No enrollment data</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Fee Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Total Fees:</span>
+                <span className="font-medium">₹{stats.fees.total}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Paid:</span>
+                <span className="font-medium text-green-600">₹{stats.fees.paid}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Pending:</span>
+                <span className="font-medium text-red-600">₹{stats.fees.total - stats.fees.paid}</span>
+              </div>
+              <Link to="/student/fees">
+                <Button variant="outline" className="w-full mt-4" size="sm">View Details</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      <Card className="mt-8">
+    </div>
+  );
+};
+
+const StudentProfile = () => {
+  const [enrollment, setEnrollment] = useState(null);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await api.get('/api/enrollments/my-enrollment');
+      setEnrollment(response.data.enrollment);
+      setProfile(response.data.profile);
+    } catch (error) {
+      toast.error('Failed to fetch profile');
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">My Profile</h1>
+      
+      {enrollment && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Academic Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-slate-600">Enrollment Number</p>
+                  <p className="font-medium">{enrollment.enrollmentNo}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Roll Number</p>
+                  <p className="font-medium">{enrollment.rollNo}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Course</p>
+                  <p className="font-medium">{enrollment.courseId?.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Current Semester</p>
+                  <p className="font-medium">{enrollment.currentSemester}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Enrollment Year</p>
+                  <p className="font-medium">{enrollment.enrollmentYear}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {profile && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-slate-600">Full Name</p>
+                    <p className="font-medium">{profile.fullName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600">Email</p>
+                    <p className="font-medium">{profile.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600">Phone</p>
+                    <p className="font-medium">{profile.phone}</p>
+                  </div>
+                  {profile.dateOfBirth && (
+                    <div>
+                      <p className="text-sm text-slate-600">Date of Birth</p>
+                      <p className="font-medium">{new Date(profile.dateOfBirth).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                  {profile.gender && (
+                    <div>
+                      <p className="text-sm text-slate-600">Gender</p>
+                      <p className="font-medium capitalize">{profile.gender}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const StudentAttendance = () => {
+  const [attendance, setAttendance] = useState([]);
+  const [stats, setStats] = useState({});
+
+  useEffect(() => {
+    fetchAttendance();
+  }, []);
+
+  const fetchAttendance = async () => {
+    try {
+      const response = await api.get('/api/attendance/my-attendance');
+      setAttendance(response.data.attendance || []);
+      setStats(response.data.stats || {});
+    } catch (error) {
+      toast.error('Failed to fetch attendance');
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">My Attendance</h1>
+      
+      {stats.total > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Total Classes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-brand-blue">{stats.total}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Present</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600">{stats.present}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Absent</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-600">{stats.absent}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Percentage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-brand-gold">{stats.percentage}%</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <Card>
         <CardHeader>
-          <CardTitle>Welcome, {user.fullName}!</CardTitle>
+          <CardTitle>Attendance Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-slate-600">Your enrollment details and academic information will appear here.</p>
+          {attendance.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {attendance.map((record) => (
+                  <TableRow key={record._id}>
+                    <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{record.subjectId?.name}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        record.status === 'present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {record.status}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-8 text-slate-600">No attendance records found</p>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 };
 
-const StatsCard = ({ title, value, icon }) => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="flex items-center justify-between">
-        <div className="text-2xl font-bold text-brand-blue">{value}</div>
-        <div className="text-brand-blue">{icon}</div>
+const StudentResults = () => {
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    fetchResults();
+  }, []);
+
+  const fetchResults = async () => {
+    try {
+      const response = await api.get('/api/exams/my-results');
+      setResults(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch results');
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">My Results</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Exam Results</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {results.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Exam</TableHead>
+                  <TableHead>Marks Obtained</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>Result</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {results.map((result) => (
+                  <TableRow key={result._id}>
+                    <TableCell className="font-medium">{result.subjectId?.name}</TableCell>
+                    <TableCell>{result.examId?.name}</TableCell>
+                    <TableCell>{result.marksObtained}/{result.examId?.maxMarks}</TableCell>
+                    <TableCell><span className="font-bold">{result.grade}</span></TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        result.isPass ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {result.isPass ? 'Pass' : 'Fail'}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-8 text-slate-600">No results available yet</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const StudentFees = () => {
+  const [fees, setFees] = useState([]);
+  const [summary, setSummary] = useState({ total: 0, paid: 0 });
+
+  useEffect(() => {
+    fetchFees();
+  }, []);
+
+  const fetchFees = async () => {
+    try {
+      const response = await api.get('/api/fees/my-fees');
+      setFees(response.data.fees || []);
+      setSummary(response.data.summary || { total: 0, paid: 0 });
+    } catch (error) {
+      toast.error('Failed to fetch fees');
+    }
+  };
+
+  const handlePayment = async (feeId, amount) => {
+    try {
+      await api.post(`/api/fees/${feeId}/pay`, { amount, paymentMode: 'demo' });
+      toast.success('Payment successful!');
+      fetchFees();
+    } catch (error) {
+      toast.error('Payment failed');
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">My Fees</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Total Fees</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-brand-blue">₹{summary.total}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Paid</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-600">₹{summary.paid}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Pending</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-red-600">₹{summary.total - summary.paid}</div>
+          </CardContent>
+        </Card>
       </div>
-    </CardContent>
-  </Card>
-);
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Fee Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {fees.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Paid</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fees.map((fee) => (
+                  <TableRow key={fee._id}>
+                    <TableCell className="capitalize">{fee.feeType}</TableCell>
+                    <TableCell>₹{fee.amount}</TableCell>
+                    <TableCell>₹{fee.paidAmount}</TableCell>
+                    <TableCell>{fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : '-'}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        fee.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {fee.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {fee.status !== 'paid' && (
+                        <Button 
+                          size="sm" 
+                          className="bg-brand-blue" 
+                          onClick={() => handlePayment(fee._id, fee.amount - fee.paidAmount)}
+                        >
+                          Pay Now
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-8 text-slate-600">No fee records found</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const StudentHostel = () => {
+  const [allocation, setAllocation] = useState(null);
+
+  useEffect(() => {
+    fetchAllocation();
+  }, []);
+
+  const fetchAllocation = async () => {
+    try {
+      const response = await api.get('/api/hostels/my-allocation');
+      setAllocation(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">Hostel Information</h1>
+      
+      {allocation ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Hostel Allocation Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-slate-600">Hostel Name</p>
+                <p className="text-lg font-medium">{allocation.hostelId?.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-600">Room Number</p>
+                <p className="text-lg font-medium">{allocation.roomNumber}</p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-600">Allocation Date</p>
+                <p className="text-lg font-medium">{new Date(allocation.allocationDate).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-600">Status</p>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                  {allocation.status}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-slate-600">No hostel allocation found</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+const StudentDocuments = () => {
+  const [documents, setDocuments] = useState([]);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      const response = await api.get('/api/documents/my-documents');
+      setDocuments(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch documents');
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">My Documents</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Document Vault</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {documents.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Uploaded Date</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {documents.map((doc) => (
+                  <TableRow key={doc._id}>
+                    <TableCell className="capitalize">{doc.documentType.replace('_', ' ')}</TableCell>
+                    <TableCell>{doc.title}</TableCell>
+                    <TableCell>{new Date(doc.uploadedAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline">View</Button>
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center py-8 text-slate-600">No documents available</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const StudentNotifications = () => {
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await api.get('/api/notifications');
+      setNotifications(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="font-serif text-4xl font-bold text-brand-blue mb-8">Notifications</h1>
+      
+      <div className="space-y-4">
+        {notifications.map((notif) => (
+          <Card key={notif._id} className={notif.isRead ? 'opacity-60' : ''}>
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-brand-blue">{notif.title}</h3>
+                  <p className="text-sm text-slate-600 mt-1">{notif.message}</p>
+                  <p className="text-xs text-slate-400 mt-2">{new Date(notif.createdAt).toLocaleString()}</p>
+                </div>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                  notif.type === 'success' ? 'bg-green-100 text-green-800' :
+                  notif.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                  notif.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {notif.type}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {notifications.length === 0 && (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-slate-600">No notifications</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Sidebar = ({ user, onLogout }) => (
-  <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6">
+  <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6 overflow-y-auto">
     <div className="flex items-center space-x-2 mb-8">
       <GraduationCap className="h-8 w-8" />
       <span className="font-serif text-2xl font-bold">UniPortal</span>
@@ -66,6 +734,27 @@ const Sidebar = ({ user, onLogout }) => (
     <nav className="space-y-2">
       <Link to="/student" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-dashboard">
         <Home className="inline h-4 w-4 mr-2" />Dashboard
+      </Link>
+      <Link to="/student/profile" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-profile">
+        <User className="inline h-4 w-4 mr-2" />Profile
+      </Link>
+      <Link to="/student/attendance" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-attendance">
+        <Calendar className="inline h-4 w-4 mr-2" />Attendance
+      </Link>
+      <Link to="/student/results" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-results">
+        <FileText className="inline h-4 w-4 mr-2" />Results
+      </Link>
+      <Link to="/student/fees" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-fees">
+        <DollarSign className="inline h-4 w-4 mr-2" />Fees
+      </Link>
+      <Link to="/student/hostel" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-hostel">
+        <Building className="inline h-4 w-4 mr-2" />Hostel
+      </Link>
+      <Link to="/student/documents" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-documents">
+        <File className="inline h-4 w-4 mr-2" />Documents
+      </Link>
+      <Link to="/student/notifications" className="block px-4 py-2 rounded-md hover:bg-slate-800" data-testid="nav-notifications">
+        <Bell className="inline h-4 w-4 mr-2" />Notifications
       </Link>
     </nav>
     <div className="absolute bottom-6 left-6 right-6">
