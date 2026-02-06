@@ -3,6 +3,8 @@ import { Routes, Route, Link } from 'react-router-dom';
 import { GraduationCap, Home, FileText, Calendar, DollarSign, Building, File, Bell, User, BookOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { toast } from 'sonner';
 import api from '../utils/api';
